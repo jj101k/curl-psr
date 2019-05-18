@@ -79,7 +79,7 @@ class Handler {
             } else {
                 $curl_code = curl_multi_exec($mh, $still_running);
             }
-            if($headers_finished) {
+            if($headers_finished or !$still_running) {
                 static $first = true;
                 if($first) {
                     $first = false;
