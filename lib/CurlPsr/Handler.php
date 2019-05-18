@@ -89,7 +89,7 @@ class Handler {
             }
         }
         if(curl_error($ch)) {
-            throw \Exception(curl_error($ch));
+            throw new \Exception(curl_error($ch));
         }
         curl_multi_remove_handle($mh, $ch);
         curl_multi_close($mh);
