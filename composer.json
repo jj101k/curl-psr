@@ -4,7 +4,7 @@
     "license": "BSD-2-Clause",
     "require": {
         "php": "^7.1",
-	"jdriscoll/celery": "^1.0.2"
+	"jdriscoll/celery": "^1.0.3"
     },
     "autoload": {
         "psr-4": {
