@@ -37,7 +37,7 @@ class Handler {
             CURLOPT_ENCODING => $request->getHeaderLine("Accept-Encoding"),
             CURLOPT_HTTPHEADER => array_map(
                 function($name) use ($request) {
-                    return $request->getHeaderLine($name);
+                    return "{$name}: " . $request->getHeaderLine($name);
                 },
                 array_keys($request->getHeaders())
             ),
