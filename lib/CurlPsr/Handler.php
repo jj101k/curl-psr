@@ -41,7 +41,6 @@ class Handler {
                 },
                 array_keys($request->getHeaders())
             ),
-            CURLOPT_POSTFIELDS => "" . $request->getBody(),
             CURLOPT_HEADERFUNCTION => function(
                 $ch,
                 $header_data
@@ -65,6 +64,9 @@ class Handler {
                 return strlen($data);
             },
         ]);
+        if(in_array($request->getMethod(), ["POST", "PUT"])) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, "" . $request->getBody());
+        }
         $mh = curl_multi_init();
         curl_multi_add_handle($mh, $ch);
         do {
