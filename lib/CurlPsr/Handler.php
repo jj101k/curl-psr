@@ -86,6 +86,7 @@ class Handler {
                     yield $header_content;
                 }
                 yield $body_content;
+                $body_content = "";
             }
         }
         if(curl_error($ch)) {
