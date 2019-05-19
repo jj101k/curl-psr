@@ -10,7 +10,8 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
     public function test() {
         $request = (new \Celery\Request())
             ->withMethod("GET");
-        $response = \CurlPsr\Handler::run(
+        $handler = new \CurlPsr\Handler();
+        $response = $handler->run(
             $request->withUri(
                 $request->getUri()
                     ->withPath("/")

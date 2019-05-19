@@ -19,7 +19,7 @@ class Handler {
      * @param int $timeout_ms
      * @return iterable<string>
      */
-    private static function runIterator(
+    private function runIterator(
         \Psr\Http\Message\RequestInterface $request,
         bool $verify = true,
         int $timeout_ms = DEFAULT_TIMEOUT_MS
@@ -107,7 +107,7 @@ class Handler {
      * @param int $timeout_ms
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public static function run(
+    public function run(
         \Psr\Http\Message\RequestInterface $request,
         bool $verify = true,
         int $timeout_ms = DEFAULT_TIMEOUT_MS

@@ -13,7 +13,8 @@ This lets you run Curl requests with PSR-7 objects. This has a few benefits:
 # Usage
 
 ```
-    $response = \CurlPsr\Handler::run(
+    $handler = new \CurlPsr\Handler();
+    $response = $handler->run(
         $request->withUri(
             $request->getUri()
                 ->withPath("/")
