@@ -96,6 +96,9 @@ class Handler {
             if($headers_finished or !$still_running) {
                 static $first = true;
                 if($first) {
+                    if(curl_error($ch)) {
+                        throw new \Exception(curl_error($ch));
+                    }
                     $first = false;
                     yield $header_content;
                 }
