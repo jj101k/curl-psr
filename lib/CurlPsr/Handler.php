@@ -33,7 +33,6 @@ class Handler {
         curl_setopt_array($ch, [
             CURLOPT_SSL_VERIFYPEER => $verify,
             CURLOPT_TIMEOUT_MS => $timeout_ms,
-            CURLOPT_CUSTOMREQUEST => $request->getMethod(),
             CURLOPT_ENCODING => $request->getHeaderLine("Accept-Encoding"),
             CURLOPT_HTTPHEADER => array_map(
                 function($name) use ($request) {
@@ -67,12 +66,18 @@ class Handler {
         switch($request->getMethod()) {
             case "HEAD":
                 curl_setopt($ch, CURLOPT_NOBODY, true);
+                // Fall through
+            case "GET":
+                // Do nothing
                 break;
             case "POST":
                 // Fall through
             case "PUT":
                 curl_setopt($ch, CURLOPT_POSTFIELDS, "" . $request->getBody());
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request->getMethod());
                 break;
+            default:
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request->getMethod());
         }
         $mh = curl_multi_init();
         curl_multi_add_handle($mh, $ch);
