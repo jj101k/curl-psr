@@ -64,8 +64,15 @@ class Handler {
                 return strlen($data);
             },
         ]);
-        if(in_array($request->getMethod(), ["POST", "PUT"])) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, "" . $request->getBody());
+        switch($request->getMethod()) {
+            case "HEAD":
+                curl_setopt($ch, CURLOPT_NOBODY, true);
+                break;
+            case "POST":
+                // Fall through
+            case "PUT":
+                curl_setopt($ch, CURLOPT_POSTFIELDS, "" . $request->getBody());
+                break;
         }
         $mh = curl_multi_init();
         curl_multi_add_handle($mh, $ch);
