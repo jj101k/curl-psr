@@ -34,12 +34,12 @@ class Handler {
             CURLOPT_SSL_VERIFYPEER => $verify,
             CURLOPT_TIMEOUT_MS => $timeout_ms,
             CURLOPT_ENCODING => $request->getHeaderLine("Accept-Encoding"),
-            CURLOPT_HTTPHEADER => array_map(
+            CURLOPT_HTTPHEADER => array_merge(["Expect:"], array_map(
                 function($name) use ($request) {
                     return "{$name}: " . $request->getHeaderLine($name);
                 },
                 array_keys($request->getHeaders())
-            ),
+            )),
             CURLOPT_HEADERFUNCTION => function(
                 $ch,
                 $header_data
