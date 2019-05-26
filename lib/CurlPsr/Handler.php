@@ -6,23 +6,24 @@ namespace CurlPsr;
  */
 class Handler {
     /**
-     * @var int
+     * @property int
      */
-    const DEFAULT_TIMEOUT_MS = 2000;
+    private $timeout = 2000;
+
+    /**
+     * @property bool
+     */
+    private $tlsVerification = true;
 
     /**
      * Runs the request, returning an iterator which will first emit the headers
      * (from HTTP/1.1 200 OK to the final empty line) and then zero or more body chunks.
      *
      * @param \Psr\Http\Message\RequestInterface $request
-     * @param bool $verify If false, TLS peer verification will be turned off
-     * @param int $timeout_ms
      * @return iterable<string>
      */
     private function runIterator(
-        \Psr\Http\Message\RequestInterface $request,
-        bool $verify = true,
-        int $timeout_ms = DEFAULT_TIMEOUT_MS
+        \Psr\Http\Message\RequestInterface $request
     ): iterable {
         $ch = curl_init($request->getUri());
         $response = new \Celery\Response();
@@ -31,8 +32,8 @@ class Handler {
         $header_content = "";
         $body_content = "";
         curl_setopt_array($ch, [
-            CURLOPT_SSL_VERIFYPEER => $verify,
-            CURLOPT_TIMEOUT_MS => $timeout_ms,
+            CURLOPT_SSL_VERIFYPEER => $this->tlsVerification,
+            CURLOPT_TIMEOUT_MS => $this->timeout,
             CURLOPT_ENCODING => $request->getHeaderLine("Accept-Encoding"),
             CURLOPT_HTTPHEADER => array_merge(["Expect:"], array_map(
                 function($name) use ($request) {
@@ -129,8 +130,46 @@ class Handler {
         bool $verify = true,
         int $timeout_ms = DEFAULT_TIMEOUT_MS
     ): \Psr\Http\Message\ResponseInterface {
+        return $this
+            ->withTLSVerification($verify)
+            ->withTimeout($timeout_ms)
+            ->runMulti($request);
+    }
+
+    /**
+     * Runs the request, returning a response object.
+     *
+     * The request is intended to just be a PSR-7 Request object, but a PSR-7
+     * ServerRequest object will typically work fine too.
+     *
+     * @param \Psr\Http\Message\RequestInterface $request
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function runMulti(
+        \Psr\Http\Message\RequestInterface $request
+    ): \Psr\Http\Message\ResponseInterface {
         return new \Celery\Response(
-            self::runIterator($request, $verify, $timeout_ms)
+            self::runIterator($request)
         );
+    }
+
+    /**
+     * @param int $timeout Timeout in milliseconds
+     * @return self
+     */
+    public function withTimeout(int $timeout): self {
+        $new = clone($this);
+        $new->timeout = $timeout;
+        return $new;
+    }
+
+    /**
+     * @param bool $verify If false, TLS peer verification will be turned off
+     * @return self
+     */
+    public function withTLSVerification(bool $verify): self {
+        $new = clone($this);
+        $new->verify = $verify;
+        return $new;
     }
 }

@@ -11,16 +11,14 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
         $request = (new \Celery\Request())
             ->withMethod("GET");
         $handler = new \CurlPsr\Handler();
-        $response = $handler->run(
+        $response = $handler->withTimeout(10000)->runSimple(
             $request->withUri(
                 $request->getUri()
                     ->withPath("/")
                     ->withHost("example.org")
                     ->withScheme("http")
                     ->withPort(80)
-            ),
-            true,
-            10000
+            )
         );
         $this->assertNotEmpty(
             "" . $response->getBody(),
