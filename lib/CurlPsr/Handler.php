@@ -23,69 +23,77 @@ class Handler {
      * @return iterable<string>
      */
     private function runIterator(
-        \Psr\Http\Message\RequestInterface $request
+        \Psr\Http\Message\RequestInterface ...$requests
     ): iterable {
-        $ch = curl_init($request->getUri());
-        $response = new \Celery\Response();
-
-        $headers_finished = false;
-        $header_content = "";
-        $body_content = "";
-        curl_setopt_array($ch, [
-            CURLOPT_SSL_VERIFYPEER => $this->tlsVerification,
-            CURLOPT_TIMEOUT_MS => $this->timeout,
-            CURLOPT_ENCODING => $request->getHeaderLine("Accept-Encoding"),
-            CURLOPT_HTTPHEADER => array_merge(["Expect:"], array_map(
-                function($name) use ($request) {
-                    return "{$name}: " . $request->getHeaderLine($name);
-                },
-                array_keys($request->getHeaders())
-            )),
-            CURLOPT_HEADERFUNCTION => function(
-                $ch,
-                $header_data
-            ) use (
-                &$header_content
-            ) {
-                $header_content .= $header_data;
-                return strlen($header_data);
-            },
-            CURLOPT_WRITEFUNCTION => function(
-                $ch,
-                $data
-            ) use (
-                &$headers_finished,
-                &$body_content
-            ) {
-                if(!$headers_finished) {
-                    $headers_finished = true;
-                }
-                $body_content .= $data;
-                return strlen($data);
-            },
-        ]);
-        switch($request->getMethod()) {
-            case "HEAD":
-                curl_setopt($ch, CURLOPT_NOBODY, true);
-                // Fall through
-            case "GET":
-                // Do nothing
-                break;
-            case "POST":
-                // Fall through
-            case "PUT":
-                curl_setopt($ch, CURLOPT_POSTFIELDS, "" . $request->getBody());
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request->getMethod());
-                break;
-            default:
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request->getMethod());
-        }
+        $body_contents = [];
+        $header_contents = [];
+        $headers_finished = [];
         $mh = curl_multi_init();
-        curl_multi_add_handle($mh, $ch);
+        foreach($requests as $k => $request) {
+            $ch = curl_init($request->getUri());
+            $response = new \Celery\Response();
+
+            $headers_finished[$k] = false;
+            $header_contents[$k] = "";
+            $body_contents[$k] = "";
+            curl_setopt_array($ch, [
+                CURLOPT_SSL_VERIFYPEER => $this->tlsVerification,
+                CURLOPT_TIMEOUT_MS => $this->timeout,
+                CURLOPT_ENCODING => $request->getHeaderLine("Accept-Encoding"),
+                CURLOPT_HTTPHEADER => array_merge(["Expect:"], array_map(
+                    function($name) use ($request) {
+                        return "{$name}: " . $request->getHeaderLine($name);
+                    },
+                    array_keys($request->getHeaders())
+                )),
+                CURLOPT_HEADERFUNCTION => function(
+                    $ch,
+                    $header_data
+                ) use (
+                    &$header_contents,
+                    $k
+                ) {
+                    $header_contents[$k] .= $header_data;
+                    return strlen($header_data);
+                },
+                CURLOPT_WRITEFUNCTION => function(
+                    $ch,
+                    $data
+                ) use (
+                    &$headers_finished,
+                    &$body_contents,
+                    $k
+                ) {
+                    if(!$headers_finished) {
+                        $headers_finished[$k] = true;
+                    }
+                    $body_contents[$k] .= $data;
+                    return strlen($data);
+                },
+            ]);
+            switch($request->getMethod()) {
+                case "HEAD":
+                    curl_setopt($ch, CURLOPT_NOBODY, true);
+                    // Fall through
+                case "GET":
+                    // Do nothing
+                    break;
+                case "POST":
+                    // Fall through
+                case "PUT":
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, "" . $request->getBody());
+                    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request->getMethod());
+                    break;
+                default:
+                    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request->getMethod());
+            }
+            curl_multi_add_handle($mh, $ch);
+        }
         do {
             $curl_code = curl_multi_exec($mh, $still_running);
         } while($curl_code == CURLM_CALL_MULTI_PERFORM);
 
+        $sent = [];
         while($still_running and $curl_code == CURLM_OK) {
             if(curl_multi_select($mh) != -1) {
                 do {
@@ -94,17 +102,21 @@ class Handler {
             } else {
                 $curl_code = curl_multi_exec($mh, $still_running);
             }
-            if($headers_finished or !$still_running) {
-                static $first = true;
-                if($first) {
-                    if(curl_error($ch)) {
-                        throw new \Exception(curl_error($ch));
+            foreach($requests as $k => $request) {
+                if($headers_finished[$k] or !$still_running) {
+                    if(!in_array($k, $sent)) {
+                        $sent[] = $k;
+                        if(curl_error($ch)) {
+                            throw new \Exception(curl_error($ch));
+                        }
+                        $first = false;
+                        yield $k => $header_contents[$k];
                     }
-                    $first = false;
-                    yield $header_content;
+                    if($body_contents[$k] != "") {
+                        yield $k => $body_contents[$k];
+                        $body_contents[$k] = "";
+                    }
                 }
-                yield $body_content;
-                $body_content = "";
             }
         }
         if(curl_error($ch)) {
@@ -142,15 +154,36 @@ class Handler {
      * The request is intended to just be a PSR-7 Request object, but a PSR-7
      * ServerRequest object will typically work fine too.
      *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @return \Psr\Http\Message\ResponseInterface
+     * @param array<\Psr\Http\Message\RequestInterface> $requests
+     * @return iterable<mixed, \Psr\Http\Message\ResponseInterface>
      */
-    public function runMulti(
-        \Psr\Http\Message\RequestInterface $request
-    ): \Psr\Http\Message\ResponseInterface {
-        return new \Celery\Response(
-            self::runIterator($request)
-        );
+    public function runMap(
+        array $requests
+    ): iterable {
+        $responses = [];
+        foreach(self::runIterator(...$requests) as $k => $content) {
+            if(array_key_exists($k, $responses)) {
+                $responses[$k]->getBody()->write($content);
+            } else {
+                $responses[$k] = new \Celery\Response($content);
+            }
+            yield $k => $responses[$k];
+        }
+    }
+
+    /**
+     * Runs the request, returning a response object.
+     *
+     * The request is intended to just be a PSR-7 Request object, but a PSR-7
+     * ServerRequest object will typically work fine too.
+     *
+     * @param \Psr\Http\Message\RequestInterface $requests,...
+     * @return iterable<\Psr\Http\Message\ResponseInterface>
+     */
+    public function runSimple(
+        \Psr\Http\Message\RequestInterface ...$requests
+    ): iterable {
+        return $this->runMap($requests);
     }
 
     /**
