@@ -22,7 +22,7 @@ class Handler {
      * @param \Psr\Http\Message\RequestInterface $request
      * @return iterable<string>
      */
-    private function runIterator(
+    protected function runIterator(
         \Psr\Http\Message\RequestInterface ...$requests
     ): iterable {
         $body_contents = [];

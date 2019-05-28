@@ -1,53 +1,37 @@
 <?php
 require_once "vendor/autoload.php";
 /**
- * This does the main high-level testing
+ * This does the main mid-level testing
  */
 class HandlerTest extends \PHPUnit\Framework\TestCase {
     /**
-     * All tests
+     * General tests
      */
     public function test() {
+        require_once "test/lib/FakeNetworkHandler.php";
         $request = (new \Celery\Request())
-            ->withMethod("GET");
-        $handler = new \CurlPsr\Handler();
+            ->withMethod("POST")
+            ->withHeader("Content-Type", "text/html");
+        $handler = new \FakeNetworkHandler();
+        $a = new \Celery\Body();
+        $a->write("ewfsdfdafddsf");
+        $b = new \Celery\Body();
+        $b->write("dsfsdfd");
         $responses = $handler->withTimeout(10000)->runSimple(
             $request->withUri(
                 $request->getUri()
-                    ->withPath("/")
-                    ->withHost("example.org")
+                    ->withPath("/" . rand())
+                    ->withHost("localhost")
                     ->withScheme("http")
                     ->withPort(80)
-            )
-        );
-        foreach($responses as $r) {
-            $response = $r;
-        }
-        $this->assertNotEmpty(
-            "" . $response->getBody(),
-            "Response returned something"
-        );
-        $this->assertRegExp(
-            "#text/html#",
-            $response->getHeaderLine("Content-Type"),
-            "Response had the expected MIME type"
-        );
-
-        $responses = $handler->withTimeout(10000)->runSimple(
+            )->withBody($a),
             $request->withUri(
                 $request->getUri()
-                    ->withPath("/")
-                    ->withHost("example.org")
+                    ->withPath("/" . rand())
+                    ->withHost("localhost")
                     ->withScheme("http")
                     ->withPort(80)
-            ),
-            $request->withUri(
-                $request->getUri()
-                    ->withPath("/")
-                    ->withHost("google.com")
-                    ->withScheme("http")
-                    ->withPort(80)
-            )
+            )->withBody($b)
         );
         $response_objects = [];
         foreach($responses as $k => $r) {
