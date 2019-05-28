@@ -161,11 +161,13 @@ class Handler {
         array $requests
     ): iterable {
         $responses = [];
+        $write_bodies = [];
         foreach(self::runIterator(...$requests) as $k => $content) {
             if(array_key_exists($k, $responses)) {
-                $responses[$k]->getBody()->write($content);
+                $write_bodies[$k]->write($content);
             } else {
                 $responses[$k] = new \Celery\Response($content);
+                $write_bodies[$k] = clone($responses[$k]->getBody());
             }
             yield $k => $responses[$k];
         }
