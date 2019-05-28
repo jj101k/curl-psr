@@ -56,6 +56,7 @@ class Handler {
                     $header_contents[$k] .= $header_data;
                     return strlen($header_data);
                 },
+                CURLOPT_PRIVATE => $k,
                 CURLOPT_WRITEFUNCTION => function(
                     $ch,
                     $data
@@ -94,6 +95,7 @@ class Handler {
         } while($curl_code == CURLM_CALL_MULTI_PERFORM);
 
         $sent = [];
+        $finished = [];
         while($still_running and $curl_code == CURLM_OK) {
             if(curl_multi_select($mh) != -1) {
                 do {
@@ -103,6 +105,9 @@ class Handler {
                 $curl_code = curl_multi_exec($mh, $still_running);
             }
             foreach($requests as $k => $request) {
+                if(in_array($k, $finished)) {
+                    continue;
+                }
                 if($headers_finished[$k] or !$still_running) {
                     if(!in_array($k, $sent)) {
                         $sent[] = $k;
@@ -118,6 +123,14 @@ class Handler {
                     }
                 }
             }
+            do {
+                $info = curl_multi_info_read($mh);
+                if($info and $info["msg"] == CURLMSG_DONE) {
+                    $k = curl_getinfo($info["handle"], CURLINFO_PRIVATE);
+                    $finished[] = $k;
+                    yield $k => "";
+                }
+            } while($info !== false);
         }
         if(curl_error($ch)) {
             throw new \Exception(curl_error($ch));
@@ -168,6 +181,12 @@ class Handler {
             } else {
                 $responses[$k] = new \Celery\Response($content);
                 $write_bodies[$k] = clone($responses[$k]->getBody());
+            }
+            if(!strlen($content)) {
+                $write_bodies[$k]->seek(0, SEEK_END);
+                $responses[$k]->getBody()->setSize(
+                    $write_bodies[$k]->tell()
+                );
             }
             yield $k => $responses[$k];
         }

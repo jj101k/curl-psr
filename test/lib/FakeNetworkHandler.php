@@ -23,6 +23,7 @@ class FakeNetworkHandler extends \CurlPsr\Handler {
         }
         foreach($requests as $k => $request) {
             yield $k => "" . $request->getBody();
+            yield $k => "";
         }
     }
 }

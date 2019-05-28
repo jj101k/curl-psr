@@ -23,6 +23,15 @@ class OnlineHandlerTest extends \PHPUnit\Framework\TestCase {
         foreach($responses as $r) {
             $response = $r;
         }
+        if(false) {
+            // This doesn't work because example.org actually sends the wrong
+            // Content-Length currently
+            $this->assertSame(
+                +$response->getHeaderLine("Content-Length"),
+                $response->getBody()->getSize(),
+                "Response size is set correctly"
+            );
+        }
         $this->assertNotEmpty(
             "" . $response->getBody(),
             "Response returned something"
