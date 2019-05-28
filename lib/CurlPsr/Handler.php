@@ -162,7 +162,7 @@ class Handler {
     ): iterable {
         $responses = [];
         $write_bodies = [];
-        foreach(self::runIterator(...$requests) as $k => $content) {
+        foreach($this->runIterator(...$requests) as $k => $content) {
             if(array_key_exists($k, $responses)) {
                 $write_bodies[$k]->write($content);
             } else {
