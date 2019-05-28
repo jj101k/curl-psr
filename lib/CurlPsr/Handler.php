@@ -171,6 +171,12 @@ class Handler {
             }
             yield $k => $responses[$k];
         }
+        foreach(array_keys($responses) as $k) {
+            $write_bodies[$k]->seek(0, SEEK_END);
+            $responses[$k]->getBody()->setSize(
+                $write_bodies[$k]->tell()
+            );
+        }
     }
 
     /**

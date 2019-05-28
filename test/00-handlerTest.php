@@ -15,8 +15,10 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
         $handler = new \FakeNetworkHandler();
         $a = new \Celery\Body();
         $a->write("ewfsdfdafddsf");
+        $a->setSize(strlen("ewfsdfdafddsf"));
         $b = new \Celery\Body();
         $b->write("dsfsdfd");
+        $b->setSize(strlen("dsfsdfd"));
         $responses = $handler->withTimeout(10000)->runSimple(
             $request->withUri(
                 $request->getUri()
@@ -37,6 +39,11 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
         foreach($responses as $k => $r) {
             $response_objects[$k] = $r;
         }
+        $this->assertSame(
+            +$response_objects[0]->getHeaderLine("Content-Length"),
+            $response_objects[0]->getBody()->getSize(),
+            "Response size is set correctly"
+        );
         $this->assertNotEmpty(
             "" . $response_objects[0]->getBody(),
             "Response returned something"
@@ -45,6 +52,11 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
             "#text/html#",
             $response_objects[0]->getHeaderLine("Content-Type"),
             "Response had the expected MIME type"
+        );
+        $this->assertSame(
+            +$response_objects[1]->getHeaderLine("Content-Length"),
+            $response_objects[1]->getBody()->getSize(),
+            "Response size is set correctly"
         );
         $this->assertNotEmpty(
             "" . $response_objects[1]->getBody(),
