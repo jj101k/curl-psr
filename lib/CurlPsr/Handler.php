@@ -53,6 +53,9 @@ class Handler {
                     &$header_contents,
                     $k
                 ) {
+                    if($this->debug) {
+                        error_log("Header chunk on {$k}");
+                    }
                     $header_contents[$k] .= $header_data;
                     return strlen($header_data);
                 },
@@ -65,6 +68,9 @@ class Handler {
                     &$body_contents,
                     $k
                 ) {
+                    if($this->debug) {
+                        error_log("Body chunk on {$k}");
+                    }
                     if(!$headers_finished[$k]) {
                         $headers_finished[$k] = true;
                     }
@@ -98,6 +104,9 @@ class Handler {
         $yield_complete = [];
         $receive_complete = [];
         while($still_running and $curl_code == CURLM_OK) {
+            if($this->debug) {
+                error_log("While top");
+            }
             if(curl_multi_select($mh) != -1) {
                 do {
                     $curl_code = curl_multi_exec($mh, $still_running);
@@ -129,6 +138,9 @@ class Handler {
                         $body_contents[$k] = "";
                     }
                     if(in_array($k, $receive_complete)) {
+                        if($this->debug) {
+                            error_log("Yield complete on {$k}");
+                        }
                         $yield_complete[] = $k;
                         yield $k => "";
                     }
@@ -143,6 +155,9 @@ class Handler {
                     }
                     $receive_complete[] = $k;
                     if(!$still_running) {
+                        if($this->debug) {
+                            error_log("Yield complete on {$k}");
+                        }
                         $yield_complete[] = $k;
                         yield $k => "";
                     }
