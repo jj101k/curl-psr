@@ -14,6 +14,16 @@ class OnlineHandlerTest extends \PHPUnit\Framework\TestCase {
                 (new \Celery\Uri())
                     ->withFullURL("http://example.org")
             );
+        $response = \CurlPsr\Handler::run($request, true, 10000);
+        $this->assertNotEmpty(
+            "" . $response->getBody(),
+            "Response returned something"
+        );
+        $this->assertRegExp(
+            "#text/html#",
+            $response->getHeaderLine("Content-Type"),
+            "Response had the expected MIME type"
+        );
         $handler = new \CurlPsr\Handler();
         $responses = $handler->withTimeout(10000)->runSimple($request);
         foreach($responses as $r) {
