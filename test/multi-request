@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php
+require_once "vendor/autoload.php";
+$request = (new \Celery\Request())
+    ->withMethod("GET");
+$handler = new \CurlPsr\Handler();
+$urls = array_slice($argv, 1);
+$responses = $handler->withTimeout(10000)->runSimple(
+    ...array_map(
+        function($url) use ($request) {
+            return $request->withUri(
+                (new \Celery\Uri())->withFullUrl($url)
+            );
+        },
+        $urls
+    )
+);
+foreach($responses as $k => $r) {
+    $content = "";
+    do {
+        $c = $r->getBody()->read(1024);
+        $content .= $c;
+    } while(strlen($c));
+    echo "{$urls[$k]}: " . strlen($c);
+    if($r->getBody()->getSize() !== null) {
+        echo " (finished)";
+    }
+    echo "\n";
+}
