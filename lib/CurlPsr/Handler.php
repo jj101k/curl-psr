@@ -272,7 +272,7 @@ class Handler {
      */
     public function withTLSVerification(bool $verify): self {
         $new = clone($this);
-        $new->verify = $verify;
+        $new->tlsVerification = $verify;
         return $new;
     }
 }
