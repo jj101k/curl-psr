@@ -25,7 +25,7 @@ foreach($responses as $k => $r) {
     if($r->getBody()->getSize() !== null) {
         echo " (finished={$r->getBody()->getSize()})";
     } elseif(!strlen($content)) {
-        echo " " . json_encode($r->getHeaders());
+        echo " [{$r->getStatusCode()}] " . json_encode($r->getHeaders());
     }
     echo "\n";
 }
