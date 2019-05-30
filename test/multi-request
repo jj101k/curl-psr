@@ -24,6 +24,8 @@ foreach($responses as $k => $r) {
     echo "{$urls[$k]}: " . strlen($content);
     if($r->getBody()->getSize() !== null) {
         echo " (finished)";
+    } elseif(!strlen($content)) {
+        echo " " . json_encode($r->getHeaders());
     }
     echo "\n";
 }
