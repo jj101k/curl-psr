@@ -23,7 +23,7 @@ foreach($responses as $k => $r) {
     } while(strlen($c));
     echo "{$urls[$k]}: " . strlen($content);
     if($r->getBody()->getSize() !== null) {
-        echo " (finished)";
+        echo " (finished={$r->getBody()->getSize()})";
     } elseif(!strlen($content)) {
         echo " " . json_encode($r->getHeaders());
     }
