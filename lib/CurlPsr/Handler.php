@@ -6,6 +6,33 @@ namespace CurlPsr;
  */
 class Handler {
     /**
+     * Runs the request, returning a response object.
+     *
+     * The request is intended to just be a PSR-7 Request object, but a PSR-7
+     * ServerRequest object will typically work fine too.
+     *
+     * @param \Psr\Http\Message\RequestInterface $request
+     * @param bool $verify If false, TLS peer verification will be turned off
+     * @param int $timeout_ms
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public static function run(
+        \Psr\Http\Message\RequestInterface $request,
+        bool $verify = true,
+        int $timeout_ms = 2000
+    ): \Psr\Http\Message\ResponseInterface {
+        $handler = new self();
+        $responses = $handler
+            ->withTLSVerification($verify)
+            ->withTimeout($timeout_ms)
+            ->runSimple($request);
+        foreach($responses as $r) {
+            $response = $r;
+        }
+        return $response;
+    }
+
+    /**
      * @property int
      */
     private $timeout = 2000;
@@ -176,28 +203,6 @@ class Handler {
      * @property bool
      */
     public $debug = false;
-
-    /**
-     * Runs the request, returning a response object.
-     *
-     * The request is intended to just be a PSR-7 Request object, but a PSR-7
-     * ServerRequest object will typically work fine too.
-     *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @param bool $verify If false, TLS peer verification will be turned off
-     * @param int $timeout_ms
-     * @return \Psr\Http\Message\ResponseInterface
-     */
-    public function run(
-        \Psr\Http\Message\RequestInterface $request,
-        bool $verify = true,
-        int $timeout_ms = DEFAULT_TIMEOUT_MS
-    ): \Psr\Http\Message\ResponseInterface {
-        return $this
-            ->withTLSVerification($verify)
-            ->withTimeout($timeout_ms)
-            ->runMulti($request);
-    }
 
     /**
      * Runs the request, returning a response object.
