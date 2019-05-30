@@ -41,3 +41,44 @@ always work includes:
 - DELETE requests
 - OPTIONS requests
 - PUT requests for short JSON resources
+
+# Advanced Usage
+
+If you want to do two or more requests in parallel, you can. To do this, you use:
+
+```
+    $handler = new \CurlPsr\Handler();
+    $responses = $handler->withTimeout(10000)->runSimple(
+        $request1,
+        $request2
+    );
+    foreach($responses as $k => $response) {
+        if($response->getBody()->getSize()) {
+            echo "" . $response->getUri();
+            echo "" . $response->getBody();
+        }
+    }
+```
+
+The return to `runSimple()` is in fact an iterator which will run over the same
+objects multiple times: once for the headers, once or more for body chunks, and
+once more when the transfer is known to be complete. The body attached to the
+response will always be up-to-date with the latest packet, but won't report a
+size until it's done.
+
+If you want specific keys to make it easier to tell which response is which, you
+can use `runMap()`:
+
+```
+    $handler = new \CurlPsr\Handler();
+    $responses = $handler->withTimeout(10000)->runMap([
+        "a" => $request1,
+        "b" => $request2
+    ]);
+    foreach($responses as $k => $response) {
+        if($response->getBody()->getSize()) {
+            echo "" . $response->getUri();
+            echo "" . $response->getBody();
+        }
+    }
+```
