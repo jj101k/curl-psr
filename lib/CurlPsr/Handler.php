@@ -65,7 +65,7 @@ class Handler {
                     &$body_contents,
                     $k
                 ) {
-                    if(!$headers_finished) {
+                    if(!$headers_finished[$k]) {
                         $headers_finished[$k] = true;
                     }
                     $body_contents[$k] .= $data;
