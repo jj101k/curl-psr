@@ -29,6 +29,7 @@ class Handler {
         $header_contents = [];
         $headers_finished = [];
         $mh = curl_multi_init();
+        curl_multi_setopt($mh, CURLMOPT_MAX_TOTAL_CONNECTIONS, 5);
         foreach($requests as $k => $request) {
             $ch = curl_init($request->getUri());
             $response = new \Celery\Response();
