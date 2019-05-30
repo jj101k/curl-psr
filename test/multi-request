@@ -21,7 +21,7 @@ foreach($responses as $k => $r) {
         $c = $r->getBody()->read(1024);
         $content .= $c;
     } while(strlen($c));
-    echo "{$urls[$k]}: " . strlen($c);
+    echo "{$urls[$k]}: " . strlen($content);
     if($r->getBody()->getSize() !== null) {
         echo " (finished)";
     }
