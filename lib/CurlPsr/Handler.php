@@ -95,7 +95,8 @@ class Handler {
         } while($curl_code == CURLM_CALL_MULTI_PERFORM);
 
         $sent = [];
-        $finished = [];
+        $yield_complete = [];
+        $receive_complete = [];
         while($still_running and $curl_code == CURLM_OK) {
             if(curl_multi_select($mh) != -1) {
                 do {
@@ -105,7 +106,7 @@ class Handler {
                 $curl_code = curl_multi_exec($mh, $still_running);
             }
             foreach($requests as $k => $request) {
-                if(in_array($k, $finished)) {
+                if(in_array($k, $yield_complete)) {
                     continue;
                 }
                 if($headers_finished[$k] or !$still_running) {
@@ -121,14 +122,21 @@ class Handler {
                         yield $k => $body_contents[$k];
                         $body_contents[$k] = "";
                     }
+                    if(in_array($k, $receive_complete)) {
+                        $yield_complete[] = $k;
+                        yield $k => "";
+                    }
                 }
             }
             do {
                 $info = curl_multi_info_read($mh);
                 if($info and $info["msg"] == CURLMSG_DONE) {
                     $k = curl_getinfo($info["handle"], CURLINFO_PRIVATE);
-                    $finished[] = $k;
-                    yield $k => "";
+                    $receive_complete[] = $k;
+                    if(!$still_running) {
+                        $yield_complete[] = $k;
+                        yield $k => "";
+                    }
                 }
             } while($info !== false);
         }
