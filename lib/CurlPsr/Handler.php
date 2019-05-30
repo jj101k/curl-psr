@@ -111,6 +111,9 @@ class Handler {
                 }
                 if($headers_finished[$k] or !$still_running) {
                     if(!in_array($k, $sent)) {
+                        if($this->debug) {
+                            error_log("Headers on {$k}");
+                        }
                         $sent[] = $k;
                         if(curl_error($ch)) {
                             throw new \Exception(curl_error($ch));
@@ -119,6 +122,9 @@ class Handler {
                         yield $k => $header_contents[$k];
                     }
                     if($body_contents[$k] != "") {
+                        if($this->debug) {
+                            error_log("Body on {$k}");
+                        }
                         yield $k => $body_contents[$k];
                         $body_contents[$k] = "";
                     }
@@ -132,6 +138,9 @@ class Handler {
                 $info = curl_multi_info_read($mh);
                 if($info and $info["msg"] == CURLMSG_DONE) {
                     $k = curl_getinfo($info["handle"], CURLINFO_PRIVATE);
+                    if($this->debug) {
+                        error_log("Receive complete on {$k}");
+                    }
                     $receive_complete[] = $k;
                     if(!$still_running) {
                         $yield_complete[] = $k;
@@ -146,6 +155,11 @@ class Handler {
         curl_multi_remove_handle($mh, $ch);
         curl_multi_close($mh);
     }
+
+    /**
+     * @property bool
+     */
+    public $debug = false;
 
     /**
      * Runs the request, returning a response object.
