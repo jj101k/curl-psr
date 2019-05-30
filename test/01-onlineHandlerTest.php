@@ -9,17 +9,13 @@ class OnlineHandlerTest extends \PHPUnit\Framework\TestCase {
      */
     public function test() {
         $request = (new \Celery\Request())
-            ->withMethod("GET");
+            ->withMethod("GET")
+            ->withUri(
+                (new \Celery\Uri())
+                    ->withFullURL("http://example.org")
+            );
         $handler = new \CurlPsr\Handler();
-        $responses = $handler->withTimeout(10000)->runSimple(
-            $request->withUri(
-                $request->getUri()
-                    ->withPath("/")
-                    ->withHost("example.org")
-                    ->withScheme("http")
-                    ->withPort(80)
-            )
-        );
+        $responses = $handler->withTimeout(10000)->runSimple($request);
         foreach($responses as $r) {
             $response = $r;
         }
