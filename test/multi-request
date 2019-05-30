@@ -5,6 +5,7 @@ $request = (new \Celery\Request())
     ->withMethod("GET");
 $handler = new \CurlPsr\Handler();
 $urls = array_slice($argv, 1);
+//$handler->debug = true;
 $responses = $handler->withTimeout(10000)->runSimple(
     ...array_map(
         function($url) use ($request) {
