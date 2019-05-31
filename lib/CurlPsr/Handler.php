@@ -26,10 +26,10 @@ class Handler {
             ->withTLSVerification($verify)
             ->withTimeout($timeout_ms)
             ->runSimple($request);
-        foreach($responses as $r) {
-            $response = $r;
+        foreach($responses as $response) {
+            $response->getBody()->setIterator($responses);
+            return $response;
         }
-        return $response;
     }
 
     /**
