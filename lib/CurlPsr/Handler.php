@@ -65,15 +65,7 @@ class Handler {
             $header_contents[$k] = "";
             $body_contents[$k] = "";
             curl_setopt_array($ch, [
-                CURLOPT_SSL_VERIFYPEER => $this->tlsVerification,
-                CURLOPT_TIMEOUT_MS => $this->timeout,
                 CURLOPT_ENCODING => $request->getHeaderLine("Accept-Encoding"),
-                CURLOPT_HTTPHEADER => array_merge(["Expect:"], array_map(
-                    function($name) use ($request) {
-                        return "{$name}: " . $request->getHeaderLine($name);
-                    },
-                    array_keys($request->getHeaders())
-                )),
                 CURLOPT_HEADERFUNCTION => function(
                     $ch,
                     $header_data
@@ -87,7 +79,15 @@ class Handler {
                     $header_contents[$k] .= $header_data;
                     return strlen($header_data);
                 },
+                CURLOPT_HTTPHEADER => array_merge(["Expect:"], array_map(
+                    function($name) use ($request) {
+                        return "{$name}: " . $request->getHeaderLine($name);
+                    },
+                    array_keys($request->getHeaders())
+                )),
                 CURLOPT_PRIVATE => $k,
+                CURLOPT_SSL_VERIFYPEER => $this->tlsVerification,
+                CURLOPT_TIMEOUT_MS => $this->timeout,
                 CURLOPT_WRITEFUNCTION => function(
                     $ch,
                     $data
