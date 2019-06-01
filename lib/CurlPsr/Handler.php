@@ -43,6 +43,19 @@ class Handler {
     private $tlsVerification = true;
 
     /**
+     * This wraps all the debug messages so that it can be overridden. Only
+     * sends if debug is on.
+     *
+     * @param string $message eg "Something happened!"
+     * @return void
+     */
+    protected function debugMessage(string $message): void {
+        if($this->debug) {
+            error_log($message);
+        }
+    }
+
+    /**
      * Runs the request, returning an iterator which will first emit the headers
      * (from HTTP/1.1 200 OK to the final empty line) and then zero or more body chunks.
      *
@@ -73,9 +86,7 @@ class Handler {
                     &$header_contents,
                     $k
                 ) {
-                    if($this->debug) {
-                        error_log("Header chunk on {$k}");
-                    }
+                    $this->debugMessage("Header chunk on {$k}");
                     $header_contents[$k] .= $header_data;
                     return strlen($header_data);
                 },
@@ -96,9 +107,7 @@ class Handler {
                     &$body_contents,
                     $k
                 ) {
-                    if($this->debug) {
-                        error_log("Body chunk on {$k}");
-                    }
+                    $this->debugMessage("Body chunk on {$k}");
                     if(!$headers_finished[$k]) {
                         $headers_finished[$k] = true;
                     }
@@ -132,9 +141,7 @@ class Handler {
         $yield_complete = [];
         $receive_complete = [];
         while($still_running and $curl_code == CURLM_OK) {
-            if($this->debug) {
-                error_log("While top");
-            }
+            $this->debugMessage("While top");
             if(curl_multi_select($mh) != -1) {
                 do {
                     $curl_code = curl_multi_exec($mh, $still_running);
@@ -148,9 +155,7 @@ class Handler {
                 }
                 if($headers_finished[$k] or !$still_running) {
                     if(!in_array($k, $sent)) {
-                        if($this->debug) {
-                            error_log("Headers on {$k}");
-                        }
+                        $this->debugMessage("Headers on {$k}");
                         $sent[] = $k;
                         if(curl_error($ch)) {
                             throw new \Exception(curl_error($ch));
@@ -159,16 +164,12 @@ class Handler {
                         yield $k => $header_contents[$k];
                     }
                     if($body_contents[$k] != "") {
-                        if($this->debug) {
-                            error_log("Body on {$k}");
-                        }
+                        $this->debugMessage("Body on {$k}");
                         yield $k => $body_contents[$k];
                         $body_contents[$k] = "";
                     }
                     if(in_array($k, $receive_complete)) {
-                        if($this->debug) {
-                            error_log("Yield complete on {$k}");
-                        }
+                        $this->debugMessage("Yield complete on {$k}");
                         $yield_complete[] = $k;
                         yield $k => "";
                     }
@@ -178,14 +179,10 @@ class Handler {
                 $info = curl_multi_info_read($mh);
                 if($info and $info["msg"] == CURLMSG_DONE) {
                     $k = curl_getinfo($info["handle"], CURLINFO_PRIVATE);
-                    if($this->debug) {
-                        error_log("Receive complete on {$k}");
-                    }
+                    $this->debugMessage("Receive complete on {$k}");
                     $receive_complete[] = $k;
                     if(!$still_running) {
-                        if($this->debug) {
-                            error_log("Yield complete on {$k}");
-                        }
+                        $this->debugMessage("Yield complete on {$k}");
                         $yield_complete[] = $k;
                         yield $k => "";
                     }
