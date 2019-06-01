@@ -86,7 +86,7 @@ class Handler {
                     &$header_contents,
                     $k
                 ) {
-                    $this->debugMessage("Header chunk on {$k}");
+                    $this->debugMessage("Header chunk on {$k} size=" . strlen($header_data));
                     $header_contents[$k] .= $header_data;
                     return strlen($header_data);
                 },
@@ -107,7 +107,7 @@ class Handler {
                     &$body_contents,
                     $k
                 ) {
-                    $this->debugMessage("Body chunk on {$k}");
+                    $this->debugMessage("Body chunk on {$k} size=" . strlen($data));
                     if(!$headers_finished[$k]) {
                         $headers_finished[$k] = true;
                     }
@@ -155,7 +155,7 @@ class Handler {
                 }
                 if($headers_finished[$k] or !$still_running) {
                     if(!in_array($k, $sent)) {
-                        $this->debugMessage("Headers on {$k}");
+                        $this->debugMessage("Headers on {$k} size=" . strlen($header_contents[$k]));
                         $sent[] = $k;
                         if(curl_error($ch)) {
                             throw new \Exception(curl_error($ch));
@@ -164,7 +164,7 @@ class Handler {
                         yield $k => $header_contents[$k];
                     }
                     if($body_contents[$k] != "") {
-                        $this->debugMessage("Body on {$k}");
+                        $this->debugMessage("Body on {$k} size=" . strlen($body_contents[$k]));
                         yield $k => $body_contents[$k];
                         $body_contents[$k] = "";
                     }
