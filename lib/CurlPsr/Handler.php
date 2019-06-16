@@ -90,7 +90,10 @@ class Handler {
                     $header_contents[$k] .= $header_data;
                     return strlen($header_data);
                 },
-                CURLOPT_HTTPHEADER => array_merge(["Expect:"], array_map(
+                CURLOPT_HTTPHEADER => array_merge([
+                    "Expect:",
+                    "User-Agent: curl-psr/1.1",
+                ], array_map(
                     function($name) use ($request) {
                         return "{$name}: " . $request->getHeaderLine($name);
                     },
