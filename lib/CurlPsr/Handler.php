@@ -21,7 +21,7 @@ class Handler {
         bool $verify = true,
         int $timeout_ms = 2000
     ): \Psr\Http\Message\ResponseInterface {
-        $handler = new self();
+        $handler = new static();
         $responses = $handler
             ->withTLSVerification($verify)
             ->withTimeout($timeout_ms)
