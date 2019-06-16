@@ -73,4 +73,52 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
             "Returned two different responses"
         );
     }
+    /**
+     * General tests
+     */
+    public function testSingleMode() {
+        require_once "test/lib/FakeNetworkHandler.php";
+        $request = (new \Celery\Request())
+            ->withMethod("POST")
+            ->withHeader("Content-Type", "text/html");
+        $handler = new \FakeNetworkHandler();
+        $a = new \Celery\Body();
+        $a->write("ewfsdfdafddsf");
+        $a->setSize(strlen("ewfsdfdafddsf"));
+        $response = \FakeNetworkHandler::run(
+            $request->withUri(
+                $request->getUri()
+                    ->withPath("/" . rand())
+                    ->withHost("localhost")
+                    ->withScheme("http")
+                    ->withPort(80)
+            )->withBody($a),
+            true,
+            10000
+        );
+        $read = [];
+        while(!$response->getBody()->eof()) {
+            $read[] = $response->getBody()->read(8192);
+        }
+        print_r($read);
+        $this->assertGreaterThan(
+            1,
+            count($read),
+            "Streamed correctly (>1 chunk)"
+        );
+        $this->assertSame(
+            +$response->getHeaderLine("Content-Length"),
+            $response->getBody()->getSize(),
+            "Response size is set correctly"
+        );
+        $this->assertNotEmpty(
+            "" . $response->getBody(),
+            "Response returned something"
+        );
+        $this->assertRegExp(
+            "#text/html#",
+            $response->getHeaderLine("Content-Type"),
+            "Response had the expected MIME type"
+        );
+    }
 }
