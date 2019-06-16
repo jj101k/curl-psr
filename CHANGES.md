@@ -1,5 +1,9 @@
 # Changes
 
+## 1.1.3
+
+- Added a default User-Agent
+
 ## 1.1.2
 
 - Re-add streaming body support in 1.0 compat mode
