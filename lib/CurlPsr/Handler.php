@@ -220,7 +220,7 @@ class Handler {
                 $write_bodies[$k]->write($content);
             } else {
                 $responses[$k] = new \Celery\Response($content);
-                $write_bodies[$k] = clone($responses[$k]->getBody());
+                $write_bodies[$k] = $responses[$k]->getBody()->writableCopy();
             }
             if(!strlen($content)) {
                 $write_bodies[$k]->seek(0, SEEK_END);
