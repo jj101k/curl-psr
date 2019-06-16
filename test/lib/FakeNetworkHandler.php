@@ -21,9 +21,21 @@ class FakeNetworkHandler extends \CurlPsr\Handler {
                 "Content-Length: " . $request->getBody()->getSize() . "\r\n" .
                 "\r\n";
         }
-        foreach($requests as $k => $request) {
-            yield $k => "" . $request->getBody();
-            yield $k => "";
+        $bodies = array_map(
+            function($request) {return "" . $request->getBody();},
+            $requests
+        );
+        while($bodies) {
+            foreach($bodies as $k => $b) {
+                yield $k => substr($b, 0, 2);
+                $b = substr($b, 2);
+                if(strlen($b)) {
+                    $bodies[$k] = $b;
+                } else {
+                    yield $k => "";
+                    unset($bodies[$k]);
+                }
+            }
         }
     }
 }
