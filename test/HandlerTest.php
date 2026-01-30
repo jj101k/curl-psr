@@ -48,7 +48,7 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
             "" . $response_objects[0]->getBody(),
             "Response returned something"
         );
-        $this->assertRegExp(
+        $this->assertMatchesRegularExpression(
             "#text/html#",
             $response_objects[0]->getHeaderLine("Content-Type"),
             "Response had the expected MIME type"
@@ -62,7 +62,7 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
             "" . $response_objects[1]->getBody(),
             "Response returned something"
         );
-        $this->assertRegExp(
+        $this->assertMatchesRegularExpression(
             "#text/html#",
             $response_objects[1]->getHeaderLine("Content-Type"),
             "Response had the expected MIME type"
@@ -100,7 +100,7 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
         while(!$response->getBody()->eof()) {
             $read[] = $response->getBody()->read(8192);
         }
-        print_r($read);
+        // print_r($read);
         $this->assertGreaterThan(
             1,
             count($read),
@@ -115,7 +115,7 @@ class HandlerTest extends \PHPUnit\Framework\TestCase {
             "" . $response->getBody(),
             "Response returned something"
         );
-        $this->assertRegExp(
+        $this->assertMatchesRegularExpression(
             "#text/html#",
             $response->getHeaderLine("Content-Type"),
             "Response had the expected MIME type"

@@ -19,7 +19,7 @@ class OnlineHandlerTest extends \PHPUnit\Framework\TestCase {
             "" . $response->getBody(),
             "Response returned something"
         );
-        $this->assertRegExp(
+        $this->assertMatchesRegularExpression(
             "#text/html#",
             $response->getHeaderLine("Content-Type"),
             "Response had the expected MIME type"
@@ -42,7 +42,7 @@ class OnlineHandlerTest extends \PHPUnit\Framework\TestCase {
             "" . $response->getBody(),
             "Response returned something"
         );
-        $this->assertRegExp(
+        $this->assertMatchesRegularExpression(
             "#text/html#",
             $response->getHeaderLine("Content-Type"),
             "Response had the expected MIME type"

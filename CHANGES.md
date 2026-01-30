@@ -1,5 +1,9 @@
 # Changes
 
+## 2.0.0
+
+- Update to PHP 8.5
+
 ## 1.1.3
 
 - Added a default User-Agent
